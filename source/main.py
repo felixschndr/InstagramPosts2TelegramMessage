@@ -1,10 +1,10 @@
 import asyncio
 from datetime import timedelta
 
-from source.environment_variable_getter import EnvironmentVariableGetter
-from source.instagram_handler import InstagramHandler
-from source.logger_mixin import LoggerMixin
-from source.telegram_handler import TelegramHandler
+from environment_variable_getter import EnvironmentVariableGetter
+from instagram_handler import InstagramHandler
+from logger_mixin import LoggerMixin
+from telegram_handler import TelegramHandler
 
 
 class InstagramMonitor(LoggerMixin):

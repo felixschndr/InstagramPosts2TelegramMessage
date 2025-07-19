@@ -1,10 +1,9 @@
 import logging
 
+from environment_variable_getter import EnvironmentVariableGetter
+from models import InstagramPost, TelegramMessage
 from telegram import Bot
 from telegram.error import TelegramError
-
-from source.environment_variable_getter import EnvironmentVariableGetter
-from source.models import InstagramPost, TelegramMessage
 
 
 class TelegramHandler:

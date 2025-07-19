@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "instagram-crawler"
+name = "InstagramPosts2TelegramMessage"
 version = "0.1.0"
-description = "A Python application that monitors an Instagram account for new posts and sends notifications via Telegram"
-authors = ["Your Name <your.email@example.com>"]
+description = "A Python application that monitors an Instagram account for new posts and sends notifications via Telegram (Proof of Concept)"
+authors = ["Felix Schneider <mail@fschneider.me>"]
 readme = "README.md"
 license = "MIT"
 package-mode = false

@@ -2,12 +2,11 @@ import os
 from datetime import datetime, timezone
 
 import pyotp
+from environment_variable_getter import EnvironmentVariableGetter
 from instagrapi import Client
 from instagrapi.types import Media
-
-from source.environment_variable_getter import EnvironmentVariableGetter
-from source.logger_mixin import LoggerMixin
-from source.models import InstagramComment, InstagramPost
+from logger_mixin import LoggerMixin
+from models import InstagramComment, InstagramPost
 
 
 class InstagramHandler(LoggerMixin):
