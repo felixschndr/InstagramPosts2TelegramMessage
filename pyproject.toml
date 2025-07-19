@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "instagram-crawler"
+version = "0.1.0"
+description = "A Python application that monitors an Instagram account for new posts and sends notifications via Telegram"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+license = "MIT"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.13"
+instagrapi = "^2.0.0"
+python-telegram-bot = "^13.7"
+python-dotenv = "^0.19.0"
+asyncio = "^3.4.3"
+pyotp = "^2.8.0"
+standard-imghdr = "^3.13.0"
+urllib3 = "1.26.15"
