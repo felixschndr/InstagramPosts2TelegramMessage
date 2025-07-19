@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pyotp
 from instagrapi import Client
@@ -11,14 +11,16 @@ from source.models import InstagramComment, InstagramPost
 
 
 class InstagramHandler(LoggerMixin):
+    POSTS_TO_FETCH = 5
+
     def __init__(self):
         super().__init__()
 
         self.target_account = EnvironmentVariableGetter.get("INSTAGRAM_TARGET_ACCOUNT")
         self.client = Client()
 
+        self.last_post_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".last_post_info.txt")
         self.last_timestamp = self._load_last_post_info()
-        self.last_post_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_post_info.txt")
 
     def login(self) -> None:
         self.log.info("Trying to login...")
@@ -38,8 +40,12 @@ class InstagramHandler(LoggerMixin):
 
     def get_new_posts(self) -> list[InstagramPost]:
         try:
+            self.log.info("Finding user ID for target account...")
             user_id = self.client.user_id_from_username(self.target_account)
-            media_items = self.client.user_medias(user_id, 20)
+            self.log.info(f"Found user ID: {user_id}")
+            self.log.info(f"Fetching {InstagramHandler.POSTS_TO_FETCH} posts...")
+            media_items = self.client.user_medias(user_id, InstagramHandler.POSTS_TO_FETCH)
+            self.log.debug("Fetched posts")
             posts = []
             newest_post_timestamp = None
 
@@ -58,19 +64,17 @@ class InstagramHandler(LoggerMixin):
                 comments = self.get_top_comments(media)
 
                 # Get the URL of the first image in the post
-                image_url = media.thumbnail_url
-
                 # Create InstagramPost object
-                instagram_post = InstagramPost(
-                    id=media.id,
-                    url=f"https://www.instagram.com/p/{media.code}/",
-                    image_url=image_url,
-                    caption=media.caption_text if media.caption_text else "",
-                    created_at=created_at,
-                    comments=comments,
+                posts.append(
+                    InstagramPost(
+                        id=media.id,
+                        url=f"https://www.instagram.com/p/{media.code}/",
+                        image_url=media.thumbnail_url,
+                        caption=media.caption_text if media.caption_text else "",
+                        created_at=created_at,
+                        comments=comments,
+                    )
                 )
-
-                posts.append(instagram_post)
 
             self._save_last_post_info(newest_post_timestamp)
 
@@ -105,14 +109,19 @@ class InstagramHandler(LoggerMixin):
             return []
 
     def _load_last_post_info(self) -> datetime:
-        if not os.path.exists(self.last_post_file):
-            return datetime.fromtimestamp(0)
+        try:
+            if not os.path.exists(self.last_post_file):
+                raise ValueError
 
-        with open(self.last_post_file, "r") as f:
-            lines = f.readlines()
-            last_timestep = datetime.fromisoformat(lines[0].strip())
-            self.log.info(f"Last seen post was from {last_timestep}")
-            return last_timestep
+            with open(self.last_post_file, "r") as f:
+                lines = f.readlines()
+                last_timestep = datetime.fromisoformat(lines[0].strip()).replace(tzinfo=timezone.utc)
+                self.log.info(f"Last seen post was from {last_timestep}")
+                return last_timestep
+
+        except (ValueError, IndexError):
+            self.log.info("File which saves last post timestamp not found or was invalid")
+            return datetime.fromtimestamp(0).replace(tzinfo=timezone.utc)
 
     def _save_last_post_info(self, newest_post_timestamp: datetime) -> None:
         try:

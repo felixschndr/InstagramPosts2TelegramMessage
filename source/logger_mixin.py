@@ -13,7 +13,3 @@ class LoggerMixin:
             level=log_level,
         )
         self.log = logging.getLogger(self.__class__.__name__)
-
-        logging.getLogger("asyncio").setLevel(logging.INFO)
-        # Disable Flask log messages
-        logging.getLogger("werkzeug").setLevel(logging.WARNING)
