@@ -3,20 +3,22 @@ import logging
 from telegram import Bot
 from telegram.error import TelegramError
 
-from models import InstagramPost, TelegramMessage
+from source.environment_variable_getter import EnvironmentVariableGetter
+from source.models import InstagramPost, TelegramMessage
 
 
 class TelegramHandler:
     """Handler for Telegram operations."""
 
-    def __init__(self, token: str):
+    def __init__(self):
         """
         Initialize the Telegram handler.
 
         Args:
             token: Telegram bot token
         """
-        self.bot = Bot(token=token)
+        self.bot = Bot(token=EnvironmentVariableGetter.get("TELEGRAM_TOKEN"))
+        self.target_chat_id = EnvironmentVariableGetter.get("TELEGRAM_TARGET_CHAT_ID")
         self.logger = logging.getLogger(__name__)
 
     async def send_message(self, message: TelegramMessage) -> bool:
@@ -44,17 +46,7 @@ class TelegramHandler:
             self.logger.error(f"Error sending message: {str(e)}")
             return False
 
-    def create_post_message(self, post: InstagramPost, chat_id: str) -> TelegramMessage:
-        """
-        Create a TelegramMessage from an InstagramPost.
-
-        Args:
-            post: InstagramPost object
-            chat_id: Telegram chat ID to send the message to
-
-        Returns:
-            TelegramMessage object
-        """
+    def create_post_message(self, post: InstagramPost) -> TelegramMessage:
         # Create message text with post caption and comments
         text = f"New post from {post.url}\n\n"
 
@@ -67,18 +59,8 @@ class TelegramHandler:
                 text += f"{i}. @{comment.username}: {comment.text}\n"
 
         # Create TelegramMessage object
-        return TelegramMessage(chat_id=chat_id, text=text, image_url=post.image_url)
+        return TelegramMessage(chat_id=self.target_chat_id, text=text, image_url=post.image_url)
 
-    async def notify_new_post(self, post: InstagramPost, chat_id: str) -> bool:
-        """
-        Notify a Telegram chat about a new Instagram post.
-
-        Args:
-            post: InstagramPost object
-            chat_id: Telegram chat ID to send the notification to
-
-        Returns:
-            True if notification was sent successfully, False otherwise
-        """
-        message = self.create_post_message(post, chat_id)
+    async def notify_new_post(self, post: InstagramPost) -> bool:
+        message = self.create_post_message(post, self.target_chat_id)
         return await self.send_message(message)
